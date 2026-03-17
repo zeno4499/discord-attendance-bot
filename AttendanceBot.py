@@ -43,6 +43,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # --- QUẢN LÝ CƠ SỞ DỮ LIỆU (SQLITE) ---
 
 def init_db():
+
+        # Lấy đường dẫn thư mục từ đường dẫn file database đầy đủ
+    db_dir = os.path.dirname(DB_PATH)
+    
+    # Tạo thư mục đó nếu nó chưa tồn tại
+    os.makedirs(db_dir, exist_ok=True)
     """Khởi tạo cơ sở dữ liệu và các bảng cần thiết."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
