@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import sqlite3
 import os
+from dotenv import load_dotenv
 
 # --- CẤU HÌNH ĐƯỜNG DẪN DATABASE CHO RENDER ---
 # Render sẽ gắn đĩa lưu trữ vào đường dẫn này.
@@ -41,7 +42,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 def init_db():
     """Khởi tạo cơ sở dữ liệu và các bảng cần thiết."""
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     # Bảng lưu trữ thông tin chấm công
     cursor.execute('''
@@ -64,7 +65,7 @@ def init_db():
 
 def is_admin(user_id: int) -> bool:
     """Kiểm tra xem một user có phải là admin không."""
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT user_id FROM admins WHERE user_id = ?", (user_id,))
     result = cursor.fetchone()
@@ -110,7 +111,7 @@ async def checkin(interaction: discord.Interaction):
     user_name = interaction.user.display_name
     current_time = datetime.now(VIETNAM_TZ)
 
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -142,7 +143,7 @@ async def checkout(interaction: discord.Interaction):
     user_id = interaction.user.id
     current_time = datetime.now(VIETNAM_TZ)
 
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -208,7 +209,7 @@ async def mystats(interaction: discord.Interaction, period: str = "weekly"):
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         period_str = f"tuần này"
 
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "SELECT check_in_time, check_out_time FROM attendance WHERE user_id = ? AND check_in_time >= ?",
@@ -252,7 +253,7 @@ async def mystats(interaction: discord.Interaction, period: str = "weekly"):
 async def status(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT user_name, check_in_time FROM attendance WHERE check_out_time IS NULL")
     active_users = cursor.fetchall()
@@ -300,7 +301,7 @@ async def history(interaction: discord.Interaction, member: discord.Member, peri
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         period_str = f"tuần này"
 
-    conn = sqlite3.connect('attendance.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "SELECT check_in_time, check_out_time FROM attendance WHERE user_id = ? AND check_in_time >= ? ORDER BY check_in_time DESC",
@@ -357,7 +358,7 @@ class ReportGroup(app_commands.Group, name="report", description="Các lệnh b�
         today = datetime.now(VIETNAM_TZ).date()
         start_of_day = datetime.combine(today, datetime.min.time(), tzinfo=VIETNAM_TZ)
         
-        conn = sqlite3.connect('attendance.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT user_name, check_in_time, check_out_time FROM attendance WHERE check_in_time >= ?",
@@ -402,7 +403,7 @@ class ReportGroup(app_commands.Group, name="report", description="Các lệnh b�
         now = datetime.now(VIETNAM_TZ)
         seven_days_ago = now - timedelta(days=7)
         
-        conn = sqlite3.connect('attendance.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT user_name, check_in_time, check_out_time FROM attendance WHERE check_in_time >= ?",
@@ -454,7 +455,7 @@ class AdminManagement(app_commands.Group, name="admin", description="Quản lý 
             await interaction.response.send_message(f"{member.display_name} đã là admin rồi.", ephemeral=True)
             return
         
-        conn = sqlite3.connect('attendance.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("INSERT INTO admins (user_id) VALUES (?)", (member.id,))
         conn.commit()
@@ -472,7 +473,7 @@ class AdminManagement(app_commands.Group, name="admin", description="Quản lý 
             await interaction.response.send_message("Không thể xóa chủ server khỏi vai trò admin.", ephemeral=True)
             return
             
-        conn = sqlite3.connect('attendance.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM admins WHERE user_id = ?", (member.id,))
         conn.commit()
