@@ -11,7 +11,7 @@ from datetime import datetime
 # Render sẽ gắn đĩa lưu trữ vào đường dẫn này.
 # Nếu biến môi trường RENDER_DISK_PATH tồn tại, dùng nó. Nếu không (chạy ở local), dùng thư mục hiện tại.
 DATA_DIR = os.environ.get('RENDER_DISK_PATH', '.') 
-DB_PATH = os.path.join(DATA_DIR, 'attendance.db')
+DB_PATH = os.path.join('/data', 'attendance.db')
 
 print(f"--- Sử dụng database tại đường dẫn: {DB_PATH} ---")
 
